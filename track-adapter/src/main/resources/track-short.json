@@ -1,0 +1,92 @@
+{
+  "type": "FeatureCollection",
+  "properties": {
+    "sensor": "51b25b00e4b01748637ea904"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.61083,
+          51.9414
+        ]
+      },
+      "properties": {
+        "time": "2013-06-08T11:28:20Z",
+        "phenomenons": {
+          "Consumption": {
+            "value": 0
+          },
+          "CO2": {
+            "value": 0
+          },
+          "Speed": {
+            "value": 0
+          },
+          "MAF": {
+            "value": 0
+          }
+        },
+        "sensor": "51b25b00e4b01748637ea904"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.61083,
+          51.9414
+        ]
+      },
+      "properties": {
+        "time": "2013-06-08T11:28:26Z",
+        "phenomenons": {
+          "CO2": {
+            "value": 4.11
+          },
+          "MAF": {
+            "value": 0.0003742862606890146
+          },
+          "Speed": {
+            "value": 0
+          },
+          "Consumption": {
+            "value": 0.0008795727126191843
+          }
+        },
+        "sensor": "51b25b00e4b01748637ea904"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.61081,
+          51.9414
+        ]
+      },
+      "properties": {
+        "time": "2013-06-08T11:28:34Z",
+        "phenomenons": {
+          "MAF": {
+            "value": 0.00041890919687821585
+          },
+          "Consumption": {
+            "value": 0.0009844366126638073
+          },
+          "CO2": {
+            "value": 4.6
+          },
+          "Speed": {
+            "value": 0
+          }
+        },
+        "sensor": "51b25b00e4b01748637ea904"
+      }
+    }
+  ]
+}

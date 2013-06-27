@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
+	<bean id="trackInboundAdapterServiceBean" class="org.n52.gep.inbound.cario.TrackInboundAdapterService"
+		activation="eager">
+		<property name="bundleContext" ref="blueprintBundleContext" />
+	</bean>
+	<service id="trackInboundAdapterService" ref="trackInboundAdapterServiceBean"
+		interface="com.esri.ges.adapter.AdapterService" />
+</blueprint>

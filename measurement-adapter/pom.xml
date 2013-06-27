@@ -1,0 +1,109 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.n52.gep</groupId>
+	<version>0.1.0-SNAPSHOT</version>
+	<packaging>bundle</packaging>
+	<artifactId>car-io-adapters</artifactId>
+
+	<repositories>
+		<repository>
+			<id>n52-releases</id>
+			<name>52n Releases</name>
+			<url>http://52north.org/maven/repo/releases/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>n52-snapshots</id>
+			<name>52n Snapshots</name>
+			<url>http://52north.org/maven/repo/snapshots/</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.esri.ges.sdk</groupId>
+			<artifactId>ges-lib</artifactId>
+			<version>10.2.0</version>
+		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.n52.sensorweb</groupId> -->
+<!-- 			<artifactId>52n-xml-om-v20</artifactId> -->
+<!-- 			<version>1.1.6-SNAPSHOT</version> -->
+<!-- 		</dependency> -->
+		<dependency>
+			<groupId>org.n52.sensorweb</groupId>
+			<artifactId>52n-xml-kml-v220</artifactId>
+			<version>1.1.6-SNAPSHOT</version>
+		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.apache.servicemix.bundles</groupId> -->
+<!-- 			<artifactId>org.apache.servicemix.bundles.xmlbeans</artifactId> -->
+<!-- 			<version>2.6.0_2</version> -->
+<!-- 		</dependency> -->
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.8.1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<source>1.6</source>
+						<target>1.6</target>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>2.3.7</version>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+						<Bundle-ContactAddress>geoeventprocessor@esri.com</Bundle-ContactAddress>
+						<Bundle-Version>${project.version}</Bundle-Version>
+						<AGES-Domain>com.esri.ges.adapter.inbound</AGES-Domain>
+  						<Import-Package>net.opengis.kml.x22.*,org.apache.xmlbeans.*,*</Import-Package>
+<!-- 						<Require-Bundle>org.n52.sensorweb.52n-xml-om-v20;bundle-version=1.1.6.SNAPSHOT</Require-Bundle> -->
+						<Private-Package>org.n52.gep.inbound.om</Private-Package>
+<!-- 						<Require-Bundle>org.apache.servicemix.bundles.xmlbeans;bundle-version=2.6.0.2</Require-Bundle> -->
+					</instructions>
+				</configuration>
+				<executions>
+					<execution>
+						<id>bundle-no-deps</id>
+						<phase>package</phase>
+						<goals>
+							<goal>bundle</goal>
+						</goals>
+						<inherited>false</inherited>
+						<configuration>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
