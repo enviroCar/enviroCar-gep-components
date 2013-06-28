@@ -21,9 +21,9 @@
 	</licenses>
 
 	<modules>
-		<module>adapter-commons</module>
-		<!-- <module>measurement-adpater</module> -->
-		<module>track-adapter</module>
+		<module>commons</module>
+		<!-- <module>measurement-components</module> -->
+		<module>track-components</module>
 	</modules>
 
 	<properties>
@@ -61,17 +61,17 @@
 			<!-- local modules -->
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>adapter-commons</artifactId>
+				<artifactId>commons</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>track-adapter</artifactId>
+				<artifactId>track-components</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>measurement-adapter</artifactId>
+				<artifactId>measurement-components</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		
@@ -79,6 +79,7 @@
 				<groupId>com.esri.ges.sdk</groupId>
 				<artifactId>ges-lib</artifactId>
 				<version>10.2.0</version>
+				<scope>provided</scope>
 			</dependency>
 			<dependency>
 				<groupId>junit</groupId>

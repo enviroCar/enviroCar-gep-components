@@ -1,0 +1,55 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.n52.gep.car-io</groupId>
+		<artifactId>car-io-components</artifactId>
+		<version>0.1.0-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>commons</artifactId>
+	<packaging>bundle</packaging>
+	<name>enviroCar-${project.artifactId}</name>
+
+	<properties>
+		<org.n52.osgi.import-package></org.n52.osgi.import-package>
+		<org.n52.osgi.export-package>org.n52.cario.gep.commons.json,
+				org.n52.cario.gep.commons.inbound,
+				org.n52.cario.gep.commons.annotations,
+				org.n52.cario.gep.commons.definitions,
+				org.n52.cario.gep.commons.processor,
+		</org.n52.osgi.export-package>
+		<org.n52.osgi.private-package></org.n52.osgi.private-package>
+		<org.n52.osgi.ages-domain></org.n52.osgi.ages-domain>
+	</properties>
+	
+	<build>
+		<finalName>enviroCar-${project.artifactId}-${project.version}</finalName>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.esri.ges.sdk</groupId>
+			<artifactId>ges-lib</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+		</dependency>
+	</dependencies>
+
+</project>
