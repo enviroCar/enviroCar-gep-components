@@ -45,6 +45,7 @@ public class PointImpl implements Point {
 		}
 		return result;
 	}
+	
 	public static Point fromMap(Map<?, ?> map) {
 		PointImpl result = new PointImpl();
 		result.setX((Double) map.get("x"));

@@ -35,6 +35,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.n52.cario.gep.commons.definitions.TrackDefinition;
 import org.n52.cario.gep.commons.inbound.AbstractInboundAdapter;
 import org.n52.cario.gep.commons.json.JsonUtil;
+import org.n52.cario.parser.sensor.SensorParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,12 +61,16 @@ public class TrackInboundAdapter extends AbstractInboundAdapter {
 	private static final String PROPERTIES_KEY = "properties";
 	private static final String PHENOMENONS_KEY = "phenomenons";
 	private static final String VALUE_KEY = "value";
+	private static final String GEOMETRY_KEY = "geometry";
+	private static final String TIME_KEY = "time";
+	private static final String ID_KEY = "id";
+	private static final String TYPE_KEY = "type";
 	
 	private static final String[] PHENOMENON_FIELDS = new String [] {
-		TrackDefinition.CONSUMPTION_KEY,
-		TrackDefinition.CO2_KEY,
-		TrackDefinition.SPEED_KEY,
-		TrackDefinition.MAF_KEY
+		"Consumption",
+		"CO2",
+		"Speed",
+		"MAF"
 	};
 
 
@@ -75,13 +80,15 @@ public class TrackInboundAdapter extends AbstractInboundAdapter {
 	}
 
 	@Override
-	protected synchronized GeoEvent createGeoEvent(InputStream input) {
+	protected synchronized boolean allDataConsumed() {
+		return this.eventQueue.isEmpty();
+	}
 
+	@Override
+	protected synchronized GeoEvent createGeoEvent(InputStream input) {
 		try {
 			Map<?, ?> json = JsonUtil.createJson(input);
-
 			appendFeaturesToQueue(json);
-
 			return this.eventQueue.poll();
 		} catch (RuntimeException e) {
 			logger.warn(e.getMessage(), e);
@@ -92,31 +99,35 @@ public class TrackInboundAdapter extends AbstractInboundAdapter {
 		}
 	}
 
+	@Override
+	protected synchronized GeoEvent createNextRemainingGeoEvent() {
+		return this.eventQueue.poll();
+	}
+
 	private void appendFeaturesToQueue(Map<?, ?> json) {
 		if (!json.containsKey(FEATURES_KEY)
 				|| !json.containsKey(PROPERTIES_KEY)
 				|| !json.containsKey(TrackDefinition.TYPE_KEY))
 			return;
-
-		List<?> features = (List<?>) json.get(FEATURES_KEY);
-		Map<?, ?> props = (Map<?, ?>) json.get(PROPERTIES_KEY);
+		
 		String type = (String) json.get(TrackDefinition.TYPE_KEY);
 		if (!type.equals("FeatureCollection"))
 			return;
 
-		String sensor;
-		if (props.containsKey(TrackDefinition.SENSOR_KEY)) {
-			sensor = (String) props.get(TrackDefinition.SENSOR_KEY);
-		} else {
-			sensor = "null";
-		}
+		List<?> features = (List<?>) json.get(FEATURES_KEY);
+		Map<?, ?> props = (Map<?, ?>) json.get(PROPERTIES_KEY);
+		
+		String sensor = parseSensor(props);
+		
+		String id = parseId(props);
 
 		for (Object feature : features) {
 			if (feature instanceof Map<?, ?>) {
 				Map<?, ?> mapFeature = (Map<?, ?>) feature;
 				try {
-					GeoEvent geoEvent = prepareGeoEvent(sensor);
+					GeoEvent geoEvent = prepareGeoEvent(sensor, id);
 					fillGeoEvent(geoEvent, mapFeature);
+					logger.info("Adding {} to eventQueue tail.", geoEvent);
 					this.eventQueue.add(geoEvent);
 				} catch (MessagingException e) {
 					logger.warn(e.getMessage(), e);
@@ -128,54 +139,74 @@ public class TrackInboundAdapter extends AbstractInboundAdapter {
 
 	}
 
-	private void fillGeoEvent(GeoEvent geoEvent, Map<?, ?> mapFeature) throws FieldException {
-		String type = (String) mapFeature.get(TrackDefinition.TYPE_KEY);
-		geoEvent.setField(TrackDefinition.TYPE_KEY, type);
-		
-		Geometry geometry = createGeometry((Map<?, ?>) mapFeature.get(TrackDefinition.GEOMETRY_KEY));
-		geoEvent.setField(TrackDefinition.GEOMETRY_KEY, geometry);
-
-		Map<?, ?> props = (Map<?, ?>) mapFeature.get(PROPERTIES_KEY);
-		Date time = null;
-		try {
-			time = isoDateTimeFormat.parse((String) props.get(TrackDefinition.TIME_KEY));
-		} catch (ParseException e) {
-			logger.warn(e.getMessage());
-		}
-		geoEvent.setField(TrackDefinition.TIME_KEY, time == null ? new Date() : time);
-		
-		Map<?, ?> phens = (Map<?, ?>) props.get(PHENOMENONS_KEY);
-		
-		for (String key : PHENOMENON_FIELDS) {
-			geoEvent.setField(key, ((Map<?, ?>) phens.get(key)).get(VALUE_KEY));
-		}
-	}
-
 	private Geometry createGeometry(Map<?, ?> object) {
-		String type = (String) object.get("type");
+		String type = (String) object.get(TYPE_KEY);
 		if (type.equals("Point")) {
 			return PointImpl.fromList((List<?>) object.get("coordinates"));
 		}
 		return null;
 	}
 
-	private GeoEvent prepareGeoEvent(String sensor) throws MessagingException,
+	private void fillGeoEvent(GeoEvent geoEvent, Map<?, ?> mapFeature) throws FieldException {
+		Geometry geometry = createGeometry((Map<?, ?>) mapFeature.get(GEOMETRY_KEY));
+		geoEvent.setField(TrackDefinition.GEOMETRY_KEY, geometry);
+
+		Map<?, ?> props = (Map<?, ?>) mapFeature.get(PROPERTIES_KEY);
+		Date time = parseDateTime(props);
+		geoEvent.setField(TrackDefinition.TIME_KEY, time == null ? new Date() : time);
+		
+		parsePhenomena(geoEvent, props);
+	}
+
+	private Date parseDateTime(Map<?, ?> props) {
+		Date time = null;
+		try {
+			time = isoDateTimeFormat.parse((String) props.get(TIME_KEY));
+		} catch (ParseException e) {
+			logger.warn(e.getMessage());
+		}
+		return time;
+	}
+
+	private String parseId(Map<?, ?> props) {
+		String id;
+		if (props.containsKey(ID_KEY)) {
+			id = (String) props.get(ID_KEY);
+		} else {
+			id = "null";
+		}
+		return id;
+	}
+
+	private void parsePhenomena(GeoEvent geoEvent, Map<?, ?> props)
+			throws FieldException {
+		Map<?, ?> phens = (Map<?, ?>) props.get(PHENOMENONS_KEY);
+		
+		for (String key : PHENOMENON_FIELDS) {
+			geoEvent.setField(key.toLowerCase(), ((Map<?, ?>) phens.get(key)).get(VALUE_KEY));
+		}
+	}
+
+	private String parseSensor(Map<?, ?> props) {
+		String sensor;
+		if (props.containsKey(TrackDefinition.SENSOR_KEY)) {
+			SensorParser sensorParser = new SensorParser();
+			sensorParser.parse(props.get(TrackDefinition.SENSOR_KEY));
+			sensor = sensorParser.getId();
+		} else {
+			sensor = "null";
+		}
+		return sensor;
+	}
+
+	private GeoEvent prepareGeoEvent(String sensor, String id) throws MessagingException,
 			FieldException {
 		GeoEventDefinition def = ((AdapterDefinition) definition)
 				.getGeoEventDefinition(TrackDefinition.DEFINITION_NAME);
 		GeoEvent result = geoEventCreator.create(def.getGuid());
 		result.setField(TrackDefinition.SENSOR_KEY, sensor);
+		result.setField(TrackDefinition.ID_KEY, id);
 		return result;
-	}
-
-	@Override
-	protected synchronized GeoEvent createNextRemainingGeoEvent() {
-		return this.eventQueue.poll();
-	}
-
-	@Override
-	protected synchronized boolean allDataConsumed() {
-		return this.eventQueue.isEmpty();
 	}
 
 }

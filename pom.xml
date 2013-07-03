@@ -23,6 +23,7 @@
 	<modules>
 		<module>commons</module>
 		<!-- <module>measurement-components</module> -->
+		<module>sensor-components</module>
 		<module>track-components</module>
 	</modules>
 
@@ -72,6 +73,11 @@
 			<dependency>
 				<groupId>${project.groupId}</groupId>
 				<artifactId>measurement-components</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>sensor-parser</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		

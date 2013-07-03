@@ -46,37 +46,48 @@ public class TrackDefinition extends AdapterDefinitionBase {
 
 	public static final String TYPE_KEY = "type";
 	public static final String SENSOR_KEY = "sensor";
-	public static final String GEOMETRY_KEY = "geometry";
-	public static final String TIME_KEY = "time";
-	public static final String CONSUMPTION_KEY = "Consumption";
-	public static final String CO2_KEY = "CO2";
-	public static final String SPEED_KEY = "Speed";
-	public static final String MAF_KEY = "MAF";
+	public static final String GEOMETRY_KEY = "shape";
+	public static final String TIME_KEY = "starttime";
+	public static final String CONSUMPTION_KEY = "consumption";
+	public static final String CO2_KEY = "co2";
+	public static final String SPEED_KEY = "speed";
+	public static final String MAF_KEY = "maf";
+	public static final String ID_KEY = "trackid";
+	
+	private static final String PRECONFIGURED_DEFINITION = "enviroCarTrack";
 
 	public TrackDefinition() {
 		super(AdapterType.INBOUND);
 		try {
-			GeoEventDefinition md = new DefaultGeoEventDefinition();
-			md.setName(DEFINITION_NAME);
-			List<FieldDefinition> fieldDefinitions = new ArrayList<FieldDefinition>();
-			fieldDefinitions.add(new DefaultFieldDefinition(TYPE_KEY,
-					FieldType.String));
-			fieldDefinitions.add(new DefaultFieldDefinition(SENSOR_KEY,
-					FieldType.String));
-			fieldDefinitions.add(new DefaultFieldDefinition(GEOMETRY_KEY,
-					FieldType.Geometry));
-			fieldDefinitions.add(new DefaultFieldDefinition(TIME_KEY,
-					FieldType.Date));
-			fieldDefinitions.add(new DefaultFieldDefinition(CONSUMPTION_KEY,
-					FieldType.Double));
-			fieldDefinitions.add(new DefaultFieldDefinition(CO2_KEY,
-					FieldType.Double));
-			fieldDefinitions.add(new DefaultFieldDefinition(SPEED_KEY,
-					FieldType.Double));
-			fieldDefinitions.add(new DefaultFieldDefinition(MAF_KEY,
-					FieldType.Double));
-			md.setFieldDefinitions(fieldDefinitions);
-			geoEventDefinitions.put(md.getName(), md);
+			if (geoEventDefinitions.get(PRECONFIGURED_DEFINITION) != null) {
+				geoEventDefinitions.put(DEFINITION_NAME, geoEventDefinitions.get(PRECONFIGURED_DEFINITION));
+			}
+			else {
+				GeoEventDefinition md = new DefaultGeoEventDefinition();
+				md.setName(DEFINITION_NAME);
+				List<FieldDefinition> fieldDefinitions = new ArrayList<FieldDefinition>();
+
+				//"TRACK_ID" is the resolved unique identifier for the feature 
+				fieldDefinitions.add(new DefaultFieldDefinition(ID_KEY,
+						FieldType.String, "TRACK_ID"));
+				fieldDefinitions.add(new DefaultFieldDefinition(SENSOR_KEY,
+						FieldType.String));
+				fieldDefinitions.add(new DefaultFieldDefinition(GEOMETRY_KEY,
+						FieldType.Geometry, "GEOMETRY"));
+				fieldDefinitions.add(new DefaultFieldDefinition(TIME_KEY,
+						FieldType.Date, "TIME_START"));
+				fieldDefinitions.add(new DefaultFieldDefinition(CONSUMPTION_KEY,
+						FieldType.Double));
+				fieldDefinitions.add(new DefaultFieldDefinition(CO2_KEY,
+						FieldType.Double));
+				fieldDefinitions.add(new DefaultFieldDefinition(SPEED_KEY,
+						FieldType.Double));
+				fieldDefinitions.add(new DefaultFieldDefinition(MAF_KEY,
+						FieldType.Double));
+				md.setFieldDefinitions(fieldDefinitions);
+				geoEventDefinitions.put(DEFINITION_NAME, md);
+			}
+			
 		} catch (ConfigurationException e) {
 			logger.warn(e.getMessage(), e);
 		}
