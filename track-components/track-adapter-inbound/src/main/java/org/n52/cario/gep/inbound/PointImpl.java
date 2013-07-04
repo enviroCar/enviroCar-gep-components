@@ -38,22 +38,32 @@ public class PointImpl implements Point {
 	
 	public static Point fromList(List<?> list) {
 		PointImpl result = new PointImpl();
-		result.setX((Double) list.get(0));
-		result.setY((Double) list.get(1));
+		result.setX(resolveDouble(list.get(0)));
+		result.setY(resolveDouble(list.get(1)));
 		if (list.size() == 3) {
-			result.setZ((Double) list.get(2));
+			result.setZ(resolveDouble(list.get(2)));
 		}
 		return result;
 	}
 	
 	public static Point fromMap(Map<?, ?> map) {
 		PointImpl result = new PointImpl();
-		result.setX((Double) map.get("x"));
-		result.setY((Double) map.get("y"));
-		result.setZ((Double) map.get("z"));
+		result.setX(resolveDouble(map.get("x")));
+		result.setY(resolveDouble(map.get("y")));
+		result.setZ(resolveDouble(map.get("z")));
 		return result;
 	}
 	
+	private static double resolveDouble(Object object) {
+		if (object instanceof Integer) {
+			return ((Integer) object).doubleValue();
+		}
+		else if (object instanceof Double) {
+			return (Double) object;
+		}
+		return Double.parseDouble(object.toString());
+	}
+
 	private GeometryType type = GeometryType.Point;
 	private double x;
 	private double y;

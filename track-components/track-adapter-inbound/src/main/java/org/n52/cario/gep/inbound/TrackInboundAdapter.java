@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.n52.cario.gep.commons.definitions.TrackDefinition;
 import org.n52.cario.gep.commons.inbound.AbstractInboundAdapter;
 import org.n52.cario.gep.commons.json.JsonUtil;
-import org.n52.cario.parser.sensor.SensorParser;
+import org.n52.cario.parser.sensor.SensorImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -190,8 +190,7 @@ public class TrackInboundAdapter extends AbstractInboundAdapter {
 	private String parseSensor(Map<?, ?> props) {
 		String sensor;
 		if (props.containsKey(TrackDefinition.SENSOR_KEY)) {
-			SensorParser sensorParser = new SensorParser();
-			sensorParser.parse(props.get(TrackDefinition.SENSOR_KEY));
+			SensorImpl sensorParser = SensorImpl.fromObject(props.get(TrackDefinition.SENSOR_KEY));
 			sensor = sensorParser.getId();
 		} else {
 			sensor = "null";

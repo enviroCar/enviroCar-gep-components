@@ -24,7 +24,7 @@ package org.n52.cario.parser.sensor;
 
 import java.util.Map;
 
-public class SensorParser {
+public class SensorImpl {
 
 	private static final String TYPE_KEY = "type";
 
@@ -47,17 +47,30 @@ public class SensorParser {
 	private String href;
 	private String type;
 
-	public SensorParser() {
+	private SensorImpl() {
 	}
-
-	public void parse(Object object) {
+	
+	public static SensorImpl fromMap(Map<?, ?> map) {
+		SensorImpl result = new SensorImpl();
+		result.parseMap(map);
+		return result;
+	}
+	
+	public static SensorImpl fromString(String s) {
+		SensorImpl result = new SensorImpl();
+		result.id = s;
+		return result;
+	}
+	
+	public static SensorImpl fromObject(Object object) {
 		if (object instanceof Map<?, ?>) {
-			parseMap((Map<?, ?>) object);
+			return fromMap((Map<?, ?>) object);
 		}
 		else if (object instanceof String) {
-			this.id = object.toString();
+			return fromString((String) object);
 		}
 		
+		return new SensorImpl();
 	}
 
 	private void parseMap(Map<?, ?> map) {

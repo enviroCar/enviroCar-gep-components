@@ -15,20 +15,30 @@
 	<properties>
 		<org.n52.osgi.import-package></org.n52.osgi.import-package>
 		<org.n52.osgi.export-package>org.n52.cario.gep.commons.json,
-				org.n52.cario.gep.commons.inbound,
-				org.n52.cario.gep.commons.annotations,
-				org.n52.cario.gep.commons.definitions,
-				org.n52.cario.gep.commons.processor,
+			org.n52.cario.gep.commons.inbound,
+			org.n52.cario.gep.commons.annotations,
+			org.n52.cario.gep.commons.definitions,
+			org.n52.cario.gep.commons.processor,
 		</org.n52.osgi.export-package>
 		<org.n52.osgi.private-package></org.n52.osgi.private-package>
 		<org.n52.osgi.ages-domain></org.n52.osgi.ages-domain>
 	</properties>
-	
+
 	<build>
 		<finalName>enviroCar-${project.artifactId}-${project.version}</finalName>
 	</build>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>com.esri.ges.sdk</groupId>
 			<artifactId>ges-lib</artifactId>
@@ -38,6 +48,12 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.2.5</version>
+		</dependency>
+
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-core</artifactId>
