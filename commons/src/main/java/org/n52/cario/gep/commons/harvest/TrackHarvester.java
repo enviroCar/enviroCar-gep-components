@@ -40,6 +40,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.ContentType;
@@ -57,12 +58,7 @@ public class TrackHarvester {
 			.getLogger(TrackHarvester.class);
 
 	private static String baseTracks = "https://giv-car.uni-muenster.de/dev/rest/tracks/";
-	private static String targetConsumer = "https://localhost:6143/geoevent/rest/receiver/enviroCar-track-in";
-
-	public static void main(String[] args) throws ClientProtocolException,
-			IOException {
-		harvestTracks();
-	}
+	private static String targetConsumer = "https://ags.dev.52north.org:6143/geoevent/rest/receiver/f9041d70-e7cb-11e2-91e2-0800200c9a66";
 
 	public static void harvestTracks() throws ClientProtocolException,
 			IOException {
@@ -80,7 +76,7 @@ public class TrackHarvester {
 			String id = (String) ((Map<?, ?>) t).get("id");
 			readAndPushTrack(id);
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(5000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -127,7 +123,7 @@ public class TrackHarvester {
 					// FIXME kind of bad practice...
 					return true;
 				}
-			});
+			}, new AllowAllHostnameVerifier());
 		} catch (KeyManagementException e) {
 			throw new IOException(e);
 		} catch (UnrecoverableKeyException e) {

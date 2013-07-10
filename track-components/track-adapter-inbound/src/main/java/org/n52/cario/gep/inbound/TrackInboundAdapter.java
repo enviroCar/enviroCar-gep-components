@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -66,13 +67,19 @@ public class TrackInboundAdapter extends AbstractInboundAdapter {
 	private static final String ID_KEY = "id";
 	private static final String TYPE_KEY = "type";
 	
-	private static final String[] PHENOMENON_FIELDS = new String [] {
-		"Consumption",
-		"CO2",
-		"Speed",
-		"MAF"
-	};
-
+	/**
+	 * Mapping cancidates in the enviroCar datastructure
+	 * to fields in the GeoEventDefinition
+	 */
+	private static Map<String[], String> phenomenonFields;
+	
+	static {
+		phenomenonFields = new HashMap<String[], String>();
+		phenomenonFields.put(new String[] {"Consumption"}, TrackDefinition.CONSUMPTION_KEY);
+		phenomenonFields.put(new String[] {"CO2"}, TrackDefinition.CO2_KEY);
+		phenomenonFields.put(new String[] {"Speed"}, TrackDefinition.SPEED_KEY);
+		phenomenonFields.put(new String[] {"Calculated MAF", "MAF"}, TrackDefinition.MAF_KEY);
+	}
 
 	public TrackInboundAdapter(AdapterDefinition definition)
 			throws ComponentException {
@@ -182,8 +189,18 @@ public class TrackInboundAdapter extends AbstractInboundAdapter {
 			throws FieldException {
 		Map<?, ?> phens = (Map<?, ?>) props.get(PHENOMENONS_KEY);
 		
-		for (String key : PHENOMENON_FIELDS) {
-			geoEvent.setField(key.toLowerCase(), ((Map<?, ?>) phens.get(key)).get(VALUE_KEY));
+		Object value;
+		for (String[] candidates : phenomenonFields.keySet()) {
+			for (int i = 0; i < candidates.length; i++) {
+				if (phens.get(candidates[i]) != null) {
+					value = ((Map<?, ?>) phens.get(candidates[i])).get(VALUE_KEY);
+					logger.trace("Setting field {} (candidate fields: {}) with value {}",
+							new Object[] {phenomenonFields.get(candidates), candidates, value});
+					
+					geoEvent.setField(phenomenonFields.get(candidates), value);
+				}
+			}
+			
 		}
 	}
 
