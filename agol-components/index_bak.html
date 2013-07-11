@@ -1,0 +1,304 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=7, IE=9, IE=10">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title></title>
+
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.5/js/dojo/dijit/themes/tundra/tundra.css">
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.5/js/esri/css/esri.css">
+    <style>
+      html, body { height: 100%; width: 100%; margin: 0; padding: 0; }
+      h3 { margin: 0 0 5px 0; border-bottom: 1px solid #444; text-align: center; }
+      .shadow {
+        -moz-box-shadow: 0 0 5px #888;
+        -webkit-box-shadow: 0 0 5px #888;
+        box-shadow: 0 0 5px #888;
+      }
+      #map{ margin: 0; padding: 0; }
+      #feedback {
+        background: #fff;
+        bottom: 30px;
+        color: #444;
+        position: absolute;
+        font-family: arial;
+        height: 400px;
+        left: 30px;
+        margin: 5px;
+        padding: 10px;
+        top: 30px;
+        width: 300px;
+        z-index: 40;
+      }
+      #note { font-size: 80%; font-weight: 700; padding: 0 0 10px 0; }
+      #loading { visibility: hidden; }
+      #legendDiv { padding: 10px 0 0 0; }
+    </style>
+
+    <script>var dojoConfig = { parseOnLoad: true };</script>
+    <script src="http://serverapi.arcgisonline.com/jsapi/arcgis/3.5/"></script>
+    <script>
+      dojo.require("dijit.layout.BorderContainer");
+      dojo.require("dijit.layout.ContentPane");
+      dojo.require("dojo.data.ItemFileReadStore");
+      dojo.require("dijit.form.FilteringSelect");
+      dojo.require("esri.map");
+      dojo.require("esri.layers.FeatureLayer");
+      dojo.require("esri.tasks.GenerateRendererTask");
+      dojo.require("esri.dijit.Legend");
+
+      // one global for persistent app variables
+      var app = {};
+
+      function init() {
+        var ext;
+
+        esri.config.defaults.io.proxyUrl = "/proxy";
+
+        app.dataUrl = "http://ags.dev.52north.org:6080/arcgis/rest/services/enviroCar/enviroCarTracks/MapServer/0";
+        app.defaultFrom = "#ffffcc";
+        app.defaultTo = "#006837";
+        
+        app.map = new esri.Map("map", {
+			center : [ 7.633, 51.9585 ],
+			zoom : 11,
+			basemap : "gray"
+		});
+
+        // add US Counties as a dynamic map service layer
+        urlDyn = "http://ags.dev.52north.org:6080/arcgis/rest/services/enviroCar/enviroCarTracks/MapServer";
+        usaLayer = new esri.layers.ArcGISDynamicMapServiceLayer(urlDyn, { 
+          id: "tracks",
+          opacity: 0.7,
+          visible: false
+        });
+        usaLayer.setVisibleLayers([0]);
+        app.map.addLayer(usaLayer);
+
+        // get field info
+        var countyFields = esri.request({
+          url: app.dataUrl,
+          content: {
+            f: "json"
+          },
+          callbackParamName: "callback"
+        });
+        countyFields.then(function(resp) {
+          var fieldNames, fieldStore;
+
+          fieldNames = { identifier: "value", label: "name", items: [] };
+          dojo.forEach(resp.fields.slice(2, 6), function(f) { // add some field names to the FS
+            fieldNames.items.push({ "name": f.name, "value": f.name });
+          });
+          fieldStore = new dojo.data.ItemFileReadStore({ data: fieldNames });
+          dijit.byId("fieldNames").set("store", fieldStore);
+          dijit.byId("fieldNames").set("value", "speed"); // set a value
+        }, function(err) {
+          console.log("failed to get field names: ", err);
+        });
+
+        // hide the loading icon when the counties layer finishes updating
+        dojo.connect(usaLayer, "onUpdateEnd", function() {
+          dojo.style(dojo.byId("loading"), "visibility", "hidden");
+        });
+
+        // update renderer when field name changes
+        dojo.connect(dijit.byId("fieldNames"), "onChange", getData);
+        dijit.byId("fieldNames").set("value", "speed"); // triggers getData()
+      }
+
+      function getData() {
+        dojo.style(dojo.byId("loading"), "visibility", "visible");
+        classBreaks(app.defaultFrom, app.defaultTo);
+      }
+      
+      function classBreaks(c1, c2) {
+        var classDef = new esri.tasks.ClassBreaksDefinition();
+        classDef.classificationField = dijit.byId("fieldNames").get("value") || "speed";
+        classDef.classificationMethod = "natural-breaks"; // always natural breaks
+        classDef.breakCount = 7; // always five classes
+
+        var colorRamp = new esri.tasks.AlgorithmicColorRamp();
+        colorRamp.fromColor = new dojo.colorFromHex("#FFffff");
+        colorRamp.toColor = new dojo.colorFromHex("#FFa000");
+        colorRamp.algorithm = "hsv"; // options are:  "cie-lab", "hsv", "lab-lch"
+        
+        classDef.baseSymbol = new esri.symbol.SimpleMarkerSymbol(esri.symbol.SimpleMarkerSymbol.STYLE_SOLID, 4,
+			null,
+			new dojo.Color([0,255,0,0.25]));
+        classDef.colorRamp = colorRamp;
+
+        var params = new esri.tasks.GenerateRendererParameters();
+        params.classificationDefinition = classDef;
+        var generateRenderer = new esri.tasks.GenerateRendererTask(app.dataUrl);
+        generateRenderer.execute(params, applyRenderer, errorHandler);
+      }
+      
+      function applyRenderer(renderer) {
+		//renderer = new esri.renderer.ClassBreaksRenderer();
+        var optionsArray = [];
+        var drawingOptions = new esri.layers.LayerDrawingOptions();
+        drawingOptions.renderer = renderer; 
+        optionsArray[0] = drawingOptions;
+        app.map.getLayer("tracks").setLayerDrawingOptions(optionsArray);
+        app.map.getLayer("tracks").show();
+        // create the legend if it doesn't exist
+        if ( ! app.hasOwnProperty("legend") ) {
+          createLegend();
+        }
+      }
+
+      function createLegend() {
+        app.legend = new esri.dijit.Legend({
+          map : app.map,
+          layerInfos : [ {
+            layer : app.map.getLayer("tracks"),
+            title : "enviroCar Tracks"
+          } ]
+        }, dojo.byId("legendDiv"));
+        app.legend.startup();
+      }
+
+      function errorHandler(err) {
+        // dojo.style(dojo.byId("loading"), "visibility", "hidden");
+        // console.log("Something broke, error: ", err);
+        console.log("error: ", dojo.toJson(err));
+      }
+
+      dojo.ready(init);
+    </script>
+  </head>
+
+  <body class="tundra">
+    <div data-dojo-type="dijit.layout.BorderContainer"
+         data-dojo-props="design:'headline',gutters:false"
+         style="width: 100%; height: 100%; margin: 0;">
+      <div id="map"
+           data-dojo-type="dijit.layout.ContentPane"
+           data-dojo-props="region:'center'">
+
+        <div id="feedback" class="shadow">
+          <h3>Change the Attribute Field Used to Render Data</h3>
+          <div id="info">
+            <div id="note">
+              Note:  This sample requires an ArcGIS Server version 10.1 map service to generate a renderer.
+            </div>
+
+            <!-- filtering select -->
+            <label for="fieldNames">Render based on: </label>
+            <select id="fieldNames" name="baseSym" 
+                    data-dojo-type="dijit.form.FilteringSelect"
+                    data-dojo-props="style:'width:200px;'">
+            </select> 
+
+            <img id="loading" src="http://dl.dropbox.com/u/2654618/loading_black.gif" />
+
+            <div id="legendDiv"></div>
+          
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+
+
+
+<!-- <!DOCTYPE html>
+<html>
+<head>
+<title>Create a Map</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=7, IE=9, IE=10">
+<link rel="stylesheet"
+	href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.5/js/dojo/dijit/themes/claro/claro.css">
+<link rel="stylesheet"
+	href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.5/js/esri/css/esri.css">
+<style>
+html,body,#mapDiv {
+	padding: 0;
+	margin: 0;
+	height: 100%;
+}
+</style>
+
+<script src="http://serverapi.arcgisonline.com/jsapi/arcgis/3.5/"></script>
+<script>
+
+	dojo.require("esri.layers.agsdynamic");
+    dojo.require("dijit.layout.BorderContainer");
+    dojo.require("dijit.layout.ContentPane");
+    dojo.require("dojo.data.ItemFileReadStore");
+    dojo.require("dijit.form.FilteringSelect");
+    dojo.require("esri.map");
+    dojo.require("esri.layers.FeatureLayer");
+    dojo.require("esri.tasks.GenerateRendererTask");
+    dojo.require("esri.dijit.Legend");
+
+      // one global for persistent app variables
+      var app = {};
+
+	
+	function init() {
+		app.map = new esri.Map("mapDiv", {
+			center : [ 7.633, 51.9585 ],
+			zoom : 11,
+			basemap : "gray"
+		});
+		var featureLayer = new esri.layers.ArcGISDynamicMapServiceLayer(
+				"http://ags.dev.52north.org:6080/arcgis/rest/services/enviroCar/enviroCarTracks/MapServer", { 
+          id: "tracks",
+          opacity: 1.0,
+          visible: false
+		  }
+        );
+		featureLayer.setVisibleLayers([0]);
+		app.map.addLayer(featureLayer);classBreaks("#000000","#00ffdd");
+	}
+	
+      function classBreaks(colorStart, colorEnd) {
+        var classDef = new esri.tasks.ClassBreaksDefinition();
+        classDef.classificationField = "speed";
+        classDef.classificationMethod = "natural-breaks"; // always natural breaks
+        classDef.breakCount = 5; // always five classes
+
+        var colorRamp = new esri.tasks.AlgorithmicColorRamp();
+        colorRamp.fromColor = new dojo.colorFromHex(colorStart);
+        colorRamp.toColor = new dojo.colorFromHex(colorEnd);
+        colorRamp.algorithm = "hsv"; // options are:  "cie-lab", "hsv", "lab-lch"
+        
+        classDef.baseSymbol = new esri.symbol.SimpleFillSymbol("solid", null, null);
+        classDef.colorRamp = colorRamp;
+
+        var params = new esri.tasks.GenerateRendererParameters();
+        params.classificationDefinition = classDef;
+        var generateRenderer = new esri.tasks.GenerateRendererTask("http://ags.dev.52north.org:6080/arcgis/rest/services/enviroCar/enviroCarTracks/MapServer/0");
+        generateRenderer.execute(params, applyRenderer, errorHandler);
+      }
+	  
+	  function errorHandler(err) {
+
+	  }
+      
+      function applyRenderer(renderer) {  
+        // dynamic layer stuff
+        var optionsArray = [];
+        var drawingOptions = new esri.layers.LayerDrawingOptions();
+        drawingOptions.renderer = renderer; 
+        optionsArray[2] = drawingOptions;
+        app.map.getLayer("tracks").setLayerDrawingOptions(optionsArray);
+        app.map.getLayer("tracks").show();
+
+      }
+
+	
+	dojo.ready(init);
+</script>
+
+</head>
+<body class="claro">
+	<div id="mapDiv"></div>
+</body>
+</html>
+ -->
