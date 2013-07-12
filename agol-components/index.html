@@ -1,5 +1,8 @@
 <!doctype html>
 <html>
+<!--
+http://ags.dev.52north.org:6080/arcgis/rest/services/enviroCar/enviroCarTracks/FeatureServer/0/generateRenderer?classificationDef={%0D%0A+++%22baseSymbol%22%3A{%0D%0A++++++%22color%22%3A[%0D%0A+++++++++255%2C%0D%0A+++++++++255%2C%0D%0A+++++++++255%2C%0D%0A+++++++++64%0D%0A++++++]%2C%0D%0A++++++%22size%22%3A4%2C%0D%0A++++++%22angle%22%3A0%2C%0D%0A++++++%22xoffset%22%3A0%2C%0D%0A++++++%22yoffset%22%3A0%2C%0D%0A++++++%22type%22%3A%22esriSMS%22%2C%0D%0A++++++%22style%22%3A%22esriSMSCircle%22%2C%0D%0A++++++%22outline%22%3Anull%0D%0A+++}%2C%0D%0A+++%22colorRamp%22%3A{%0D%0A++++++%22type%22%3A%22algorithmic%22%2C%0D%0A++++++%22algorithm%22%3A%22esriHSVAlgorithm%22%2C%0D%0A++++++%22fromColor%22%3A[%0D%0A+++++++++255%2C255%2C138%2C%0D%0A+++++++++255%0D%0A++++++]%2C%0D%0A++++++%22toColor%22%3A[%0D%0A+++++++++255%2C0%2C0%2C%0D%0A+++++++++255%0D%0A++++++]%0D%0A+++}%2C%0D%0A+++%22type%22%3A%22classBreaksDef%22%2C%0D%0A+++%22classificationField%22%3A%22consumption%22%2C%0D%0A+++%22classificationMethod%22%3A%22esriClassifyQuantile%22%2C%0D%0A+++%22breakCount%22%3A6%0D%0A}&where=&gdbVersion=&f=html
+-->
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=7, IE=9, IE=10">
@@ -23,15 +26,26 @@
         color: #444;
         position: absolute;
         font-family: arial;
-        height: 100px;
+		font-size: 0.8em;
+        height: 440px;
         left: 30px;
         margin: 5px;
         padding: 10px;
         top: 30px;
-        width: 300px;
+        width: 200px;
         z-index: 40;
       }
-      #note { font-size: 80%; font-weight: 700; padding: 0 0 10px 0; }
+      #note { font-size: 80%; padding: 0 0 10px 0; }
+#fieldNames_popup .dijitComboBoxMenu .dijitMenuItem {
+ font-size:0.8em;
+}
+select#fieldNames {
+ display: block;
+ width:100px;
+ }
+div#fieldNames_popup .dijitMenuItem {
+	font-size:0.8em;
+}
       #loading { visibility: hidden; }
       #legendDiv { padding: 10px 0 0 0; }
     </style>
@@ -47,11 +61,17 @@
       dojo.require("esri.layers.FeatureLayer");
       dojo.require("esri.tasks.GenerateRendererTask");
       dojo.require("esri.dijit.Legend");
-	  dojo.require("esri.dijit.InfoWindowLite");
+	  dojo.require("esri.dijit.Popup");
+	  dojo.require("esri.layers.agsdynamic");
 
+	  
       // one global for persistent app variables
       var app = {};
 
+	  var rendererDefault = null;
+	  var rendererBig = null;
+	  var previousLod = 11;
+	  
       function init() {
         var ext;
 
@@ -60,28 +80,55 @@
         app.dataUrl = "http://ags.dev.52north.org:6080/arcgis/rest/services/enviroCar/enviroCarTracks/MapServer/0";
         app.defaultFrom = "#ffffcc";
         app.defaultTo = "#006837";
-        
+		
+      var popupOptions = {
+          markerSymbol: new esri.symbol.SimpleMarkerSymbol("circle", 32, null, new dojo.Color([0, 0, 0, 0.25])),
+          marginLeft: "20", 
+          marginTop: "20"
+        };
+        var popup = new esri.dijit.Popup(popupOptions, dojo.create("div"));
+		
         app.map = new esri.Map("map", {
 			center : [ 7.633, 51.9585 ],
-			zoom : 11,
+			zoom : previousLod,
 			basemap : "gray",
-			slider: false
+			slider: false,
+            infoWindow: popup
 		});
 		
-        dojo.connect(app.map,"onLoad", function(map) {map.infoWindow.resize(250, 100);} );
-        dojo.connect(app.map, "onClick", addPoint);
+<!--         dojo.connect(app.map,"onLoad", function(map) {map.infoWindow.resize(250, 100);} ); -->
+       
 
-
+        //define a popup template
+        var popupTemplate = new esri.dijit.PopupTemplate({
+          title: "{sensor}",
+          fieldInfos: [
+		  {fieldName: "starttime", visible: true, label:"Time",format:{dateFormat:'shortDateShortTime'}},
+          {fieldName: "speed", visible: true, label:"Speed"},
+		  {fieldName: "co2", visible: true, label:"CO2 Emission"},
+		  {fieldName: "consumption", visible: true, label:"Fuel Consumption"},
+		  {fieldName: "maf", visible: true, label:"Calculated MAF"}
+          ]
+        });
+		
         // add US Counties as a dynamic map service layer
         urlDyn = "http://ags.dev.52north.org:6080/arcgis/rest/services/enviroCar/enviroCarTracks/MapServer";
-        usaLayer = new esri.layers.ArcGISDynamicMapServiceLayer(urlDyn, { 
+        trackImageLayer = new esri.layers.ArcGISDynamicMapServiceLayer(urlDyn, { 
           id: "tracks",
-          opacity: 1.0,
           visible: false
         });
-        usaLayer.setVisibleLayers([0]);
-        app.map.addLayer(usaLayer);
+        trackImageLayer.setVisibleLayers([0]);
+        app.map.addLayer(trackImageLayer);
 
+		urlInfo = "http://ags.dev.52north.org:6080/arcgis/rest/services/enviroCar/enviroCarTracks/MapServer/0"
+		trackPopupLayer = new esri.layers.FeatureLayer(urlInfo, { 
+          id: "tracksPoup",
+		  infoTemplate: popupTemplate,
+          opacity: 0,
+		  outFields: ["starttime", "sensor", "speed", "co2", "consumption", "maf"]
+        });
+		app.map.addLayer(trackPopupLayer);
+		
         // get field info
         var countyFields = esri.request({
           url: app.dataUrl,
@@ -105,47 +152,70 @@
         });
 
         // hide the loading icon when the counties layer finishes updating
-        dojo.connect(usaLayer, "onUpdateEnd", function() {
+        dojo.connect(trackImageLayer, "onUpdateEnd", function() {
           dojo.style(dojo.byId("loading"), "visibility", "hidden");
         });
 
         // update renderer when field name changes
         dojo.connect(dijit.byId("fieldNames"), "onChange", getData);
+		dojo.connect(app.map, "onExtentChange", scaleChanged);
+
         dijit.byId("fieldNames").set("value", "speed"); // triggers getData()
       }
 
+	  function scaleChanged(extent, delta, outLevelChange, outLod) {		
+		 if (outLod.level > 14 && previousLod <= 14) {
+			applyRenderer(true);
+		 }
+		 else if (outLod.level <= 14 && previousLod > 14) {
+			applyRenderer(false);
+		 }
+		 
+		 previousLod = outLod.level;
+      }
+
+	  
       function getData() {
         dojo.style(dojo.byId("loading"), "visibility", "visible");
         createRenderer(dijit.byId("fieldNames").get("value") || "speed");
       }
 	  
-      function addPoint(evt) {
-        app.map.infoWindow.setTitle("Coordinates");
-        app.map.infoWindow.setContent("lat/lon : " + evt.mapPoint.y + ", " + evt.mapPoint.x +
-          "<br />screen x/y : " + evt.screenPoint.x + ", " + evt.screenPoint.y);
-        app.map.infoWindow.show(evt.screenPoint, app.map.getInfoWindowAnchor(evt.screenPoint));
-      }
       
       function createRenderer(phenomenonField) {
-		var request;
+		var request, requestBig;
         if (phenomenonField == "maf") {
 			request = esri.request({url:"data/rendererMAF.json",handleAs:"json"});
+			requestBig = esri.request({url:"data/rendererBigMAF.json",handleAs:"json"});
 		}
 		else if (phenomenonField == "co2") {
 			request = esri.request({url:"data/rendererCo2.json",handleAs:"json"});
+			requestBig = esri.request({url:"data/rendererBigCo2.json",handleAs:"json"});
 		}
 		else if (phenomenonField == "consumption") {
 			request = esri.request({url:"data/rendererConsumption.json",handleAs:"json"});
+			requestBig = esri.request({url:"data/rendererBigConsumption.json",handleAs:"json"});
 		}
 		else {
 			request = esri.request({url:"data/rendererSpeed.json",handleAs:"json"});
+			requestBig = esri.request({url:"data/rendererBigSpeed.json",handleAs:"json"});
 		}
 		request.then(function(response) {
-			applyRenderer(new esri.renderer.ClassBreaksRenderer(response));
+			rendererDefault = new esri.renderer.ClassBreaksRenderer(response);
+			applyRenderer(previousLod > 14);
+		});
+		requestBig.then(function(response) {
+			rendererBig = new esri.renderer.ClassBreaksRenderer(response);
+			applyRenderer(previousLod > 14);
 		});
       }
       
-      function applyRenderer(renderer) {
+      function applyRenderer(useBig) {
+		var renderer;
+		if (useBig) {
+			renderer = rendererBig;
+		} else {
+			renderer = rendererDefault;
+		}
 		//renderer = new esri.renderer.ClassBreaksRenderer();
         var optionsArray = [];
         var drawingOptions = new esri.layers.LayerDrawingOptions();
@@ -154,9 +224,9 @@
         app.map.getLayer("tracks").setLayerDrawingOptions(optionsArray);
         app.map.getLayer("tracks").show();
         // create the legend if it doesn't exist
- //       if ( ! app.hasOwnProperty("legend") ) {
- //         createLegend();
- //       }
+        if ( ! app.hasOwnProperty("legend") ) {
+          createLegend();
+        }
       }
 
       function createLegend() {
@@ -189,6 +259,7 @@
            data-dojo-props="region:'center'">
 
         <div id="feedback" class="shadow">
+		<div style="position:absolute; right:5px; top:5px"><img id="loading" src="ajax.gif" width="18"/></div>
           <h3>enviroCar Tracks</h3>
           <div id="info">
             <!-- filtering select -->
@@ -198,9 +269,9 @@
                     data-dojo-props="style:'width:200px;'">
             </select> 
 
-            <img id="loading" src="http://dl.dropbox.com/u/2654618/loading_black.gif" />
-
-            <div id="legendDiv"></div>
+			<div id="legendContainer">
+				<div id="legendDiv"></div>
+			</div>
           
           </div>
         </div>
