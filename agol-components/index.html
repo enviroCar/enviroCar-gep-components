@@ -78,9 +78,7 @@ div#fieldNames_popup .dijitMenuItem {
         esri.config.defaults.io.proxyUrl = "/proxy";
 
         app.dataUrl = "http://ags.dev.52north.org:6080/arcgis/rest/services/enviroCar/enviroCarTracks/MapServer/0";
-        app.defaultFrom = "#ffffcc";
-        app.defaultTo = "#006837";
-		
+
       var popupOptions = {
           markerSymbol: new esri.symbol.SimpleMarkerSymbol("circle", 32, null, new dojo.Color([0, 0, 0, 0.25])),
           marginLeft: "20", 
@@ -96,11 +94,16 @@ div#fieldNames_popup .dijitMenuItem {
             infoWindow: popup
 		});
 		
-<!--         dojo.connect(app.map,"onLoad", function(map) {map.infoWindow.resize(250, 100);} ); -->
+		app.queryTask = new esri.tasks.QueryTask("http://ags.dev.52north.org:6080/arcgis/rest/services/enviroCar/enviroCarTracks/MapServer/0");
+	    app.query = new esri.tasks.Query();
+        app.query.returnGeometry = true;
+        app.query.outFields = ["starttime", "sensor", "speed", "co2", "consumption", "maf"];
+		
+		dojo.connect(app.map, 'onClick', queryFeatureInfo);
        
 
         //define a popup template
-        var popupTemplate = new esri.dijit.PopupTemplate({
+        app.popupTemplate = new esri.dijit.PopupTemplate({
           title: "{sensor}",
           fieldInfos: [
 		  {fieldName: "starttime", visible: true, label:"Time",format:{dateFormat:'shortDateShortTime'}},
@@ -120,24 +123,16 @@ div#fieldNames_popup .dijitMenuItem {
         trackImageLayer.setVisibleLayers([0]);
         app.map.addLayer(trackImageLayer);
 
-		urlInfo = "http://ags.dev.52north.org:6080/arcgis/rest/services/enviroCar/enviroCarTracks/MapServer/0"
-		trackPopupLayer = new esri.layers.FeatureLayer(urlInfo, { 
-          id: "tracksPoup",
-		  infoTemplate: popupTemplate,
-          opacity: 0,
-		  outFields: ["starttime", "sensor", "speed", "co2", "consumption", "maf"]
-        });
-		app.map.addLayer(trackPopupLayer);
 		
         // get field info
-        var countyFields = esri.request({
+        var trackFields = esri.request({
           url: app.dataUrl,
           content: {
             f: "json"
           },
           callbackParamName: "callback"
         });
-        countyFields.then(function(resp) {
+        trackFields.then(function(resp) {
           var fieldNames, fieldStore;
 
           fieldNames = { identifier: "value", label: "name", items: [] };
@@ -161,6 +156,28 @@ div#fieldNames_popup .dijitMenuItem {
 		dojo.connect(app.map, "onExtentChange", scaleChanged);
 
         dijit.byId("fieldNames").set("value", "speed"); // triggers getData()
+      }
+	  
+	function queryFeatureInfo(e) {
+        // build an extent around the click point
+        var pad = app.map.extent.getWidth() / app.map.width * 3;
+        var queryGeom = new esri.geometry.Extent(e.mapPoint.x - pad, e.mapPoint.y - pad, e.mapPoint.x + pad, e.mapPoint.y + pad, app.map.spatialReference);
+        app.query.geometry = queryGeom;
+
+
+        var def = app.queryTask.execute(app.query);
+        def.addCallback(function(result) {
+          return dojo.map(result.features, function(f) {
+            f.setInfoTemplate(app.popupTemplate);
+            return f;
+          });
+        }); 
+
+        // use the deferred returned from the query task to set
+        // the popup features
+        app.map.infoWindow.setFeatures([def]);
+        // show the popup
+        app.map.infoWindow.show(e.screenPoint, app.map.getInfoWindowAnchor(e.screenPoint));
       }
 
 	  function scaleChanged(extent, delta, outLevelChange, outLod) {		
