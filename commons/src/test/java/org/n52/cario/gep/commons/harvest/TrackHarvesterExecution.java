@@ -31,7 +31,7 @@ public class TrackHarvesterExecution {
 
 	public static void main(String[] args) throws ClientProtocolException,
 			IOException {
-		TrackHarvester.harvestTracks();
+		new TrackHarvester().harvestTracks();
 	}
 	
 }
