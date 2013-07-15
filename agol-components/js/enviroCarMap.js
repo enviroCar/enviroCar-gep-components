@@ -19,7 +19,7 @@ var previousLod = 11;
 function init() {
 	esri.config.defaults.io.proxyUrl = "/proxy";
 
-	app.dataUrl = "http://ags.dev.52north.org:6080/arcgis/rest/services/enviroCar/enviroCarTracks/MapServer/0";
+	app.dataUrl = "http://ags.dev.52north.org:6080/arcgis/rest/services/enviroCar/enviroCarTracks/MapServer";
 
 	app.map = new esri.Map("map", {
 		center : [ 7.633, 51.9585 ],
@@ -33,8 +33,7 @@ function init() {
 	createPopupTemplate();
 	
 	//the track layer
-	urlDyn = "http://ags.dev.52north.org:6080/arcgis/rest/services/enviroCar/enviroCarTracks/MapServer";
-	trackImageLayer = new esri.layers.ArcGISDynamicMapServiceLayer(urlDyn, {
+	trackImageLayer = new esri.layers.ArcGISDynamicMapServiceLayer(app.dataUrl, {
 		id : "tracks",
 		visible : false
 	});
@@ -65,8 +64,7 @@ function createPopup() {
 }
 
 function prepareFeatureQuery() {
-	app.queryTask = new esri.tasks.QueryTask(
-			"http://ags.dev.52north.org:6080/arcgis/rest/services/enviroCar/enviroCarTracks/MapServer/0");
+	app.queryTask = new esri.tasks.QueryTask(app.dataUrl + "/0");
 	app.query = new esri.tasks.Query();
 	app.query.returnGeometry = true;
 	app.query.outFields = [ "starttime", "sensor", "speed", "co2",
@@ -75,7 +73,7 @@ function prepareFeatureQuery() {
 
 function retrieveFields() {
 	var trackFields = esri.request({
-		url : app.dataUrl,
+		url : app.dataUrl + "/0",
 		content : {
 			f : "json"
 		},
