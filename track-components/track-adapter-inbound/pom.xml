@@ -8,7 +8,7 @@
 		<version>0.1.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>enviroCar-track-adapter-inbound</artifactId>
+	<artifactId>track-adapter-inbound</artifactId>
 	<packaging>bundle</packaging>
 	<description>52°North enviroCar Track inbound adapter</description>
 

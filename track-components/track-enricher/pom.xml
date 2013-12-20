@@ -8,7 +8,7 @@
 		<version>0.1.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>enviroCar-track-enricher</artifactId>
+	<artifactId>track-enricher</artifactId>
 	<packaging>bundle</packaging>
 	<description>52°North enviroCar Track enricher processor</description>
 

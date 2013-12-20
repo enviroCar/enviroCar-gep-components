@@ -8,7 +8,7 @@
 		<version>0.1.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>enviroCar-sensor-components</artifactId>
+	<artifactId>sensor-components</artifactId>
 	<packaging>pom</packaging>
 
 	<modules>
