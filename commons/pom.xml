@@ -34,8 +34,8 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.esri.ges.sdk</groupId>
-			<artifactId>ges-lib</artifactId>
+			<groupId>com.esri.geoevent.sdk</groupId>
+			<artifactId>geoevent-sdk</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

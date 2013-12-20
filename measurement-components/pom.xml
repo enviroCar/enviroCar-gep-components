@@ -38,8 +38,8 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.esri.ges.sdk</groupId>
-			<artifactId>ges-lib</artifactId>
+			<groupId>com.esri.geoevent.sdk</groupId>
+			<artifactId>geoevent-sdk</artifactId>
 		</dependency>
 <!-- 		<dependency> -->
 <!-- 			<groupId>org.n52.sensorweb</groupId> -->
