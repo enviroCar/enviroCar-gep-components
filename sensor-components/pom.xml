@@ -3,12 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.n52.gep.car-io</groupId>
-		<artifactId>car-io-components</artifactId>
+		<groupId>org.n52.gep.enviroCar</groupId>
+		<artifactId>enviroCar-gep-components</artifactId>
 		<version>0.1.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>sensor-components</artifactId>
+	<artifactId>enviroCar-sensor-components</artifactId>
 	<packaging>pom</packaging>
 
 	<modules>

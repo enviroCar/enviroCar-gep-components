@@ -7,11 +7,11 @@
 		<version>5.6.4</version>
 	</parent>
 
-	<groupId>org.n52.gep.car-io</groupId>
-	<artifactId>car-io-components</artifactId>
+	<groupId>org.n52.gep.enviroCar</groupId>
+	<artifactId>enviroCar-gep-components</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>car.io adapters for ESRI ArcGIS GeoEvent Processor for Server</name>
+	<name>enviroCar adapters for ESRI ArcGIS GeoEvent Processor for Server</name>
 
 	<licenses>
 		<license>
@@ -117,6 +117,11 @@
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-annotations</artifactId>
 				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpclient</artifactId>
+				<version>4.2.5</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

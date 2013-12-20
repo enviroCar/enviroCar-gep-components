@@ -3,15 +3,14 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.n52.gep.car-io</groupId>
+		<groupId>org.n52.gep.enviroCar</groupId>
 		<artifactId>track-components</artifactId>
 		<version>0.1.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>track-enricher</artifactId>
+	<artifactId>enviroCar-track-enricher</artifactId>
 	<packaging>bundle</packaging>
 	<description>52°North enviroCar Track enricher processor</description>
-	<name>enviroCar-${project.artifactId}</name>
 
 	<properties>
 		<org.n52.osgi.import-package></org.n52.osgi.import-package>

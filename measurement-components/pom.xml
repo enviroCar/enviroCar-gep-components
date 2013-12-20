@@ -1,10 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.n52.gep</groupId>
-	<version>0.1.0-SNAPSHOT</version>
+
+	<parent>
+		<groupId>org.n52.gep.car-io</groupId>
+		<artifactId>enviroCar-gep-components</artifactId>
+		<version>0.1.0-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>enviroCar-measurement-components</artifactId>
 	<packaging>bundle</packaging>
-	<artifactId>car-io-adapters</artifactId>
 
 	<repositories>
 		<repository>
@@ -35,7 +40,6 @@
 		<dependency>
 			<groupId>com.esri.ges.sdk</groupId>
 			<artifactId>ges-lib</artifactId>
-			<version>10.2.0</version>
 		</dependency>
 <!-- 		<dependency> -->
 <!-- 			<groupId>org.n52.sensorweb</groupId> -->
