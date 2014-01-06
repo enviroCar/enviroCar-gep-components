@@ -96,10 +96,18 @@ public class TrackInboundAdapter extends AbstractInboundAdapter {
 	@Override
 	protected synchronized GeoEvent createGeoEvent(InputStream input) {
 		try {
-			logger.debug("Queue size before: {}", this.eventQueue.size());
+			int preSize = this.eventQueue.size();
+			logger.debug("Queue size before: {}", preSize);
 			Map<?, ?> json = JsonUtil.createJson(input);
-			appendFeaturesToQueue(json);
+			int jsonFeatureCount = appendFeaturesToQueue(json);
+			logger.debug("# of features in track's JSON: {}", jsonFeatureCount);
 			logger.debug("Queue size after: {}", this.eventQueue.size());
+			
+			if ((this.eventQueue.size() - preSize) != jsonFeatureCount) {
+				logger.warn("Could not process every feature of the Track. Expected {} but processed {}",
+						jsonFeatureCount, this.eventQueue.size() - preSize);
+			}
+			
 			return this.eventQueue.poll();
 		} catch (RuntimeException e) {
 			logger.warn(e.getMessage(), e);
@@ -115,18 +123,18 @@ public class TrackInboundAdapter extends AbstractInboundAdapter {
 		return this.eventQueue.poll();
 	}
 
-	private void appendFeaturesToQueue(Map<?, ?> json) {
+	private int appendFeaturesToQueue(Map<?, ?> json) {
 		if (!json.containsKey(FEATURES_KEY)
 				|| !json.containsKey(PROPERTIES_KEY)
 				|| !json.containsKey(TrackDefinition.TYPE_KEY))
-			return;
+			return 0;
 		
 		String type = (String) json.get(TrackDefinition.TYPE_KEY);
 		if (!type.equals("FeatureCollection"))
-			return;
+			return 0;
 
 		List<?> features = (List<?>) json.get(FEATURES_KEY);
-		logger.debug("# of features in track's JSON: {}", features.size());
+		
 		Map<?, ?> props = (Map<?, ?>) json.get(PROPERTIES_KEY);
 		
 		String sensor = parseSensor(props);
@@ -149,6 +157,7 @@ public class TrackInboundAdapter extends AbstractInboundAdapter {
 			}
 		}
 
+		return features.size();
 	}
 
 	private Geometry createGeometry(Map<?, ?> object) {
