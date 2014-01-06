@@ -96,8 +96,10 @@ public class TrackInboundAdapter extends AbstractInboundAdapter {
 	@Override
 	protected synchronized GeoEvent createGeoEvent(InputStream input) {
 		try {
+			logger.info("Queue size before: {}", this.eventQueue.size());
 			Map<?, ?> json = JsonUtil.createJson(input);
 			appendFeaturesToQueue(json);
+			logger.info("Queue size after: {}", this.eventQueue.size());
 			return this.eventQueue.poll();
 		} catch (RuntimeException e) {
 			logger.warn(e.getMessage(), e);
@@ -124,6 +126,7 @@ public class TrackInboundAdapter extends AbstractInboundAdapter {
 			return;
 
 		List<?> features = (List<?>) json.get(FEATURES_KEY);
+		logger.info("# of features in track's JSON: {}", features.size());
 		Map<?, ?> props = (Map<?, ?>) json.get(PROPERTIES_KEY);
 		
 		String sensor = parseSensor(props);
