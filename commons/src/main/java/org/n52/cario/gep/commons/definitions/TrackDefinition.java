@@ -51,8 +51,9 @@ public class TrackDefinition extends AdapterDefinitionBase {
 	public static final String CONSUMPTION_KEY = "consumption";
 	public static final String CO2_KEY = "co2";
 	public static final String SPEED_KEY = "speed";
-	public static final String MAF_KEY = "maf";
 	public static final String ID_KEY = "trackid";
+	public static final String ENVIROCAR_TRACK_KEY = "enviroCar-track";
+	public static final String BEARING_KEY = "bearing";
 	
 	private static final String PRECONFIGURED_DEFINITION = "enviroCarTrack";
 
@@ -82,8 +83,10 @@ public class TrackDefinition extends AdapterDefinitionBase {
 						FieldType.Double));
 				fieldDefinitions.add(new DefaultFieldDefinition(SPEED_KEY,
 						FieldType.Double));
-				fieldDefinitions.add(new DefaultFieldDefinition(MAF_KEY,
+				fieldDefinitions.add(new DefaultFieldDefinition(BEARING_KEY,
 						FieldType.Double));
+				fieldDefinitions.add(new DefaultFieldDefinition(ENVIROCAR_TRACK_KEY,
+						FieldType.String));
 				md.setFieldDefinitions(fieldDefinitions);
 				geoEventDefinitions.put(DEFINITION_NAME, md);
 			}

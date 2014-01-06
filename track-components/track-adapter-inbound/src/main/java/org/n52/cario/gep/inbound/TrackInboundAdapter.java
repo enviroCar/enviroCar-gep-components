@@ -66,6 +66,8 @@ public class TrackInboundAdapter extends AbstractInboundAdapter {
 	private static final String TIME_KEY = "time";
 	private static final String ID_KEY = "id";
 	private static final String TYPE_KEY = "type";
+
+	public static final String ENVIROCAR_TRACK_VIEW_LINK = "https://envirocar.org/route.php?id=";
 	
 	/**
 	 * Mapping cancidates in the enviroCar datastructure
@@ -78,7 +80,7 @@ public class TrackInboundAdapter extends AbstractInboundAdapter {
 		phenomenonFields.put(new String[] {"Consumption"}, TrackDefinition.CONSUMPTION_KEY);
 		phenomenonFields.put(new String[] {"CO2"}, TrackDefinition.CO2_KEY);
 		phenomenonFields.put(new String[] {"Speed"}, TrackDefinition.SPEED_KEY);
-		phenomenonFields.put(new String[] {"Calculated MAF", "MAF"}, TrackDefinition.MAF_KEY);
+		phenomenonFields.put(new String[] {"GPS Bearing"}, TrackDefinition.BEARING_KEY);
 	}
 
 	public TrackInboundAdapter(AdapterDefinition definition)
@@ -222,6 +224,7 @@ public class TrackInboundAdapter extends AbstractInboundAdapter {
 		GeoEvent result = geoEventCreator.create(def.getGuid());
 		result.setField(TrackDefinition.SENSOR_KEY, sensor);
 		result.setField(TrackDefinition.ID_KEY, id);
+		result.setField(TrackDefinition.ENVIROCAR_TRACK_KEY, ENVIROCAR_TRACK_VIEW_LINK.concat(id));
 		return result;
 	}
 
