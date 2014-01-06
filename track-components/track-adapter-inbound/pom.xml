@@ -18,9 +18,28 @@
 		<org.n52.osgi.private-package>org.n52.cario.gep.inbound</org.n52.osgi.private-package>
 		<org.n52.osgi.ages-domain>com.esri.ges.adapter.inbound</org.n52.osgi.ages-domain>
 	</properties>
-	
+
 	<build>
 		<finalName>enviroCar-${project.artifactId}-${project.version}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+					<execution>
+						<configuration>
+							<descriptors>
+								<descriptor>src/main/config/assemble.xml</descriptor>
+							</descriptors>
+						</configuration>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<phase>install</phase>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 
 	<dependencies>
