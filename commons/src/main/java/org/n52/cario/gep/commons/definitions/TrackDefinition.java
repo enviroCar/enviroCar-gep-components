@@ -52,7 +52,7 @@ public class TrackDefinition extends AdapterDefinitionBase {
 	public static final String CO2_KEY = "co2";
 	public static final String SPEED_KEY = "speed";
 	public static final String ID_KEY = "trackid";
-	public static final String ENVIROCAR_TRACK_KEY = "enviroCar_track";
+	public static final String ENVIROCAR_TRACK_KEY = "enviroCar-track";
 	public static final String BEARING_KEY = "bearing";
 	
 	private static final String PRECONFIGURED_DEFINITION = "enviroCarTrack";
